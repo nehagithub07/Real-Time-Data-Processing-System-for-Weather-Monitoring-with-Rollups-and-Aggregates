@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        async function getWeather() {
+            const city = document.getElementById('city').value;
+            if (!city) {
+                alert('Please enter a city');
+                return;
+            }
+
+            document.getElementById('result').innerHTML = '<div class="spinner"></div>';
+
+            const response = await fetch('/weather', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ city })
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                let forecastHTML = '';
+                data.forecast.forEach(entry => {
+                    forecastHTML += `
+                        <div class="forecast-entry">
+                            <h3>${entry.date}</h3>
+                            <p><i class="fas fa-thermometer-half"></i> Temperature: ${entry.temperature} °C</p>
+                            <p><i class="fas fa-cloud-sun"></i> Description: ${entry.description}</p>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('result').innerHTML = `
+                    <div class="weather-summary">
+                        <h2>Weather in ${data.city}</h2>
+                        <p><i class="fas fa-temperature-high"></i> Current Temperature: ${data.current.temperature} °C</p>
+                        <p><i class="fas fa-cloud"></i> Description: ${data.current.description}</p>
+                        <p><i class="fas fa-tint"></i> Humidity: ${data.current.humidity} %</p>
+                        <p><i class="fas fa-wind"></i> Wind Speed: ${data.current.wind_speed} m/s</p>
+                    </div>
+                    <h2>Forecast</h2>
+                    ${forecastHTML}
+                `;
+            } else {
+                document.getElementById('result').innerHTML = `<p class="error">${data.error}</p>`;
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Weather App</h1>
+        </nav>
+    </header>
+    <div class="container">
+        <form onsubmit="event.preventDefault(); getWeather();">
+            <label for="city">Enter city:</label>
+            <input type="text" id="city" name="city" placeholder="e.g., London" required>
+            <button type="submit"><i class="fas fa-search"></i> Get Weather</button>
+        </form>
+        <div id="result"></div>
+    </div>
+</body>
+</html>
